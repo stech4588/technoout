@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title">
+  <title id="title">Technoout engineered access system</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101d31"/><stop offset="1" stop-color="#050911"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#22d3ee" stop-opacity=".34"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="#67e8f9" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/><rect width="1200" height="900" fill="url(#grid)"/><circle cx="600" cy="410" r="360" fill="url(#glow)"/>
+  <path d="M355 655V285h490v370M455 655V390h290v265" fill="none" stroke="#67e8f9" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M600 390v265M405 705h390" fill="none" stroke="#a5f3fc" stroke-width="8"/>
+  <circle cx="600" cy="525" r="34" fill="#22d3ee"/><circle cx="600" cy="525" r="12" fill="#07101c"/>
+  <text x="600" y="790" text-anchor="middle" fill="#cffafe" font-family="Arial,sans-serif" font-size="34" font-weight="700" letter-spacing="10">TECHNOOUT</text>
+</svg>

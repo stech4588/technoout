@@ -1,0 +1,4 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+class Inquiry extends Model { protected $guarded=[]; protected function casts(): array { return ['attachments'=>'array']; } public function items(){ return $this->hasMany(InquiryItem::class); } }
