@@ -10,7 +10,7 @@ declare global {
     const route: typeof routeFn;
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Technoout';
+const appName = import.meta.env.VITE_APP_NAME || 'ViaTech';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -21,7 +21,8 @@ createInertiaApp({
         root.render(<App {...props} />);
     },
     progress: {
-        color: '#67e8f9',
+        color: '#0891b2',
+        showSpinner: true,
     },
 });
 

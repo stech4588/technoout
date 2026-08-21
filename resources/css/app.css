@@ -59,12 +59,87 @@
 }
 
 @layer components {
-    .tech-grid { background-image:linear-gradient(rgba(103,232,249,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(103,232,249,.07) 1px,transparent 1px);background-size:48px 48px; }
-    .section-kicker { @apply mb-4 text-xs font-bold uppercase tracking-[.28em] text-cyan-300; }
+    .tech-grid { background-image:linear-gradient(rgba(15,102,230,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(15,102,230,.07) 1px,transparent 1px);background-size:48px 48px; }
+    .section-kicker { @apply mb-4 flex items-center gap-3 text-xs font-bold uppercase tracking-[.28em] text-blue-400; }
+    .section-kicker::before { content: ''; width: 1.75rem; height: 2px; border-radius: 999px; background: #f4b528; }
     .section-title { @apply max-w-4xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl; }
     .page-hero { @apply border-b border-white/10 py-20 md:py-28; }
-    .form-input { @apply w-full rounded-xl border border-white/10 bg-[#0a101c] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60; }
+    .form-input { @apply w-full rounded-xl border border-white/10 bg-[#0a101c] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-blue-400/60; }
     .prose-tech { @apply leading-8 text-slate-300; }
+
+    .brand-wordmark-silver { color: #8d96a3; }
+    .brand-wordmark-blue { color: #0969e8; }
+    .brand-wordmark-tagline { color: #aab1bb; }
+}
+
+/* Public marketing site: restrained light theme, scoped away from the admin UI. */
+@layer components {
+    .public-theme { background: #f7f9fc; color: #10213b; }
+    .public-theme .tech-grid { background-image: linear-gradient(rgba(9,105,232,.065) 1px,transparent 1px),linear-gradient(90deg,rgba(9,105,232,.065) 1px,transparent 1px); }
+    .public-theme .section-kicker { color: #0759c8; }
+    .public-theme .section-title { color: #10213b; }
+    .public-theme .page-hero { @apply border-slate-200; }
+    .public-theme .form-input { @apply border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-500; }
+    .public-theme .prose-tech { @apply text-slate-600; }
+    .public-theme .text-white, .public-theme .text-slate-100, .public-theme .text-slate-200 { color: #0f172a !important; }
+    .public-theme .text-slate-300 { color: #334155 !important; }
+    .public-theme .text-slate-400 { color: #475569 !important; }
+    .public-theme .text-slate-500, .public-theme .text-slate-600 { color: #64748b !important; }
+    .public-theme .text-cyan-200, .public-theme .text-cyan-300 { color: #075fd8 !important; }
+    .public-theme [class*="border-white"] { border-color: rgba(15,23,42,.12) !important; }
+    .public-theme [class*="border-cyan"] { border-color: rgba(9,105,232,.28) !important; }
+    .public-theme [class*="bg-white/"] { background-color: rgba(255,255,255,.82) !important; }
+    .public-theme [class*="bg-black/"] { background-color: rgba(241,245,249,.88) !important; }
+    .public-theme [class*="bg-[#0"] { background-color: #fff !important; }
+    .public-theme [class*="bg-cyan-"] { background-color: rgba(9,105,232,.08) !important; }
+    .public-theme .bg-cyan-300 { background-color: #075fd8 !important; color: #fff !important; }
+    .public-theme .bg-cyan-300.text-slate-950 { color: #fff !important; }
+    .public-theme .brand-wordmark-tagline { color: #667085; }
+
+    .public-theme a,
+    .public-theme button { transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease; }
+
+    .admin-theme .text-cyan-200,
+    .admin-theme .text-cyan-300,
+    .admin-theme .text-cyan-400 { color: #63a7ff !important; }
+    .admin-theme .bg-cyan-300 { background-color: #126ce5 !important; color: #fff !important; }
+    .admin-theme [class*="border-cyan"] { border-color: rgba(68, 145, 255, .42) !important; }
+    .admin-theme [class*="hover:text-cyan"]:hover { color: #8bbcff !important; }
+
+    .public-theme main > * {
+        animation: public-page-enter 380ms cubic-bezier(.2, .75, .3, 1) both;
+    }
+}
+
+/* Inertia navigation feedback. */
+#nprogress .bar {
+    height: 3px !important;
+    background: #0969e8 !important;
+    box-shadow: 0 0 12px rgba(9, 105, 232, .42);
+    transition: transform 320ms ease-out !important;
+}
+
+#nprogress .spinner {
+    top: 27px !important;
+    right: 24px !important;
+}
+
+#nprogress .spinner-icon {
+    width: 20px !important;
+    height: 20px !important;
+    border-width: 2px !important;
+    border-top-color: #0969e8 !important;
+    border-left-color: #0969e8 !important;
+}
+
+@keyframes public-page-enter {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .public-theme main > * { animation: none; }
+    #nprogress .spinner { display: none !important; }
 }
 
 /*
@@ -86,74 +161,74 @@
 }
 
 :root {
-    --background: hsl(0, 0%, 100%);
-    --foreground: hsl(0, 0%, 3.9%);
+    --background: hsl(216, 33%, 98%);
+    --foreground: hsl(216, 58%, 15%);
     --card: hsl(0, 0%, 100%);
-    --card-foreground: hsl(0, 0%, 3.9%);
+    --card-foreground: hsl(216, 58%, 15%);
     --popover: hsl(0, 0%, 100%);
-    --popover-foreground: hsl(0, 0%, 3.9%);
-    --primary: hsl(0, 0%, 9%);
-    --primary-foreground: hsl(0, 0%, 98%);
-    --secondary: hsl(0, 0%, 96.1%);
-    --secondary-foreground: hsl(0, 0%, 9%);
-    --muted: hsl(0, 0%, 96.1%);
-    --muted-foreground: hsl(0, 0%, 45.1%);
-    --accent: hsl(0, 0%, 96.1%);
-    --accent-foreground: hsl(0, 0%, 9%);
+    --popover-foreground: hsl(216, 58%, 15%);
+    --primary: hsl(215, 92%, 47%);
+    --primary-foreground: hsl(0, 0%, 100%);
+    --secondary: hsl(216, 25%, 94%);
+    --secondary-foreground: hsl(216, 58%, 15%);
+    --muted: hsl(216, 25%, 95%);
+    --muted-foreground: hsl(215, 13%, 44%);
+    --accent: hsl(215, 100%, 96%);
+    --accent-foreground: hsl(215, 86%, 37%);
     --destructive: hsl(0, 84.2%, 60.2%);
     --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 92.8%);
-    --input: hsl(0, 0%, 89.8%);
-    --ring: hsl(0, 0%, 3.9%);
-    --chart-1: hsl(12, 76%, 61%);
-    --chart-2: hsl(173, 58%, 39%);
-    --chart-3: hsl(197, 37%, 24%);
-    --chart-4: hsl(43, 74%, 66%);
-    --chart-5: hsl(27, 87%, 67%);
+    --border: hsl(216, 22%, 89%);
+    --input: hsl(216, 20%, 86%);
+    --ring: hsl(215, 92%, 47%);
+    --chart-1: hsl(215, 92%, 47%);
+    --chart-2: hsl(218, 35%, 51%);
+    --chart-3: hsl(215, 25%, 60%);
+    --chart-4: hsl(41, 90%, 56%);
+    --chart-5: hsl(218, 54%, 18%);
     --radius: 0.5rem;
-    --sidebar-background: hsl(0, 0%, 98%);
-    --sidebar-foreground: hsl(240, 5.3%, 30%);
-    --sidebar-primary: hsl(0, 0%, 10%);
-    --sidebar-primary-foreground: hsl(0, 0%, 98%);
-    --sidebar-accent: hsl(0, 0%, 94%);
-    --sidebar-accent-foreground: hsl(0, 0%, 30%);
-    --sidebar-border: hsl(0, 0%, 91%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
+    --sidebar-background: hsl(216, 33%, 98%);
+    --sidebar-foreground: hsl(216, 34%, 28%);
+    --sidebar-primary: hsl(215, 92%, 47%);
+    --sidebar-primary-foreground: hsl(0, 0%, 100%);
+    --sidebar-accent: hsl(215, 100%, 96%);
+    --sidebar-accent-foreground: hsl(215, 75%, 34%);
+    --sidebar-border: hsl(216, 22%, 89%);
+    --sidebar-ring: hsl(215, 92%, 47%);
 }
 
 .dark {
-    --background: hsl(0, 0%, 3.9%);
-    --foreground: hsl(0, 0%, 98%);
-    --card: hsl(0, 0%, 3.9%);
-    --card-foreground: hsl(0, 0%, 98%);
-    --popover: hsl(0, 0%, 3.9%);
-    --popover-foreground: hsl(0, 0%, 98%);
-    --primary: hsl(0, 0%, 98%);
-    --primary-foreground: hsl(0, 0%, 9%);
-    --secondary: hsl(0, 0%, 14.9%);
-    --secondary-foreground: hsl(0, 0%, 98%);
-    --muted: hsl(0, 0%, 6.9%);
-    --muted-foreground: hsl(0, 0%, 63.9%);
-    --accent: hsl(0, 0%, 14.9%);
-    --accent-foreground: hsl(0, 0%, 98%);
+    --background: hsl(217, 55%, 7%);
+    --foreground: hsl(216, 25%, 94%);
+    --card: hsl(217, 48%, 9%);
+    --card-foreground: hsl(216, 25%, 94%);
+    --popover: hsl(217, 48%, 9%);
+    --popover-foreground: hsl(216, 25%, 94%);
+    --primary: hsl(214, 100%, 62%);
+    --primary-foreground: hsl(0, 0%, 100%);
+    --secondary: hsl(217, 32%, 15%);
+    --secondary-foreground: hsl(216, 25%, 94%);
+    --muted: hsl(217, 34%, 12%);
+    --muted-foreground: hsl(215, 16%, 67%);
+    --accent: hsl(216, 51%, 18%);
+    --accent-foreground: hsl(213, 100%, 83%);
     --destructive: hsl(0, 84%, 60%);
     --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 14.9%);
-    --input: hsl(0, 0%, 14.9%);
-    --ring: hsl(0, 0%, 83.1%);
+    --border: hsl(217, 26%, 18%);
+    --input: hsl(217, 26%, 18%);
+    --ring: hsl(214, 100%, 62%);
     --chart-1: hsl(220, 70%, 50%);
     --chart-2: hsl(160, 60%, 45%);
     --chart-3: hsl(30, 80%, 55%);
     --chart-4: hsl(280, 65%, 60%);
     --chart-5: hsl(340, 75%, 55%);
-    --sidebar-background: hsl(0, 0%, 7%);
-    --sidebar-foreground: hsl(0, 0%, 80%);
-    --sidebar-primary: hsl(360, 100%, 100%);
+    --sidebar-background: hsl(218, 58%, 6%);
+    --sidebar-foreground: hsl(215, 16%, 76%);
+    --sidebar-primary: hsl(214, 100%, 62%);
     --sidebar-primary-foreground: hsl(0, 0%, 100%);
-    --sidebar-accent: hsl(0, 0%, 15.9%);
-    --sidebar-accent-foreground: hsl(240, 4.8%, 95.9%);
-    --sidebar-border: hsl(0, 0%, 15.9%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
+    --sidebar-accent: hsl(216, 51%, 18%);
+    --sidebar-accent-foreground: hsl(213, 100%, 88%);
+    --sidebar-border: hsl(217, 26%, 18%);
+    --sidebar-ring: hsl(214, 100%, 62%);
 }
 
 @layer base {

@@ -11,6 +11,8 @@ Technoout is a Laravel 13 and React/Inertia B2B automation and security platform
 5. Run `php artisan storage:link`.
 6. Run `npm run dev`, or `npm run build` for production.
 
+For queue workers, scheduling, HTTPS, backup, monitoring, deployment, and rollback requirements, see [PRODUCTION.md](PRODUCTION.md).
+
 The configured Laragon URL is `http://technoout.test`.
 
 ## Initial administrator
