@@ -23,6 +23,9 @@ return new class extends Migration {
         ];
         foreach($children as $slug=>[$name,$parent]){$id=DB::table('categories')->where('slug',$slug)->value('id');if(!$id)$id=DB::table('categories')->insertGetId(['parent_id'=>$ids[$parent],'name'=>$name,'slug'=>$slug,'description'=>$name.' selected for reliable system integration and supported installation.','is_active'=>true,'sort_order'=>count($ids)+1,'created_at'=>now(),'updated_at'=>now()]);$ids[$slug]=$id;}
 
+        // Production/local catalog records are populated by the scraper. Keep
+        // this legacy reference dataset available only as isolated test data.
+        if (app()->runningUnitTests()) {
         $rows = <<<'CATALOG'
 evacs-u79-series-uhf-rfid-high-performance-integrated-reader|eVACS U79 Series UHF RFID High Performance Integrated Reader|rfid-readers
 rgl100-led-traffic-signal-light|RGL100-L LED Traffic Signal Light|signal-lights
@@ -104,6 +107,7 @@ powertech-pw330-swing-gate-operator|Powertech PW330 Swing Gate Operator|automati
 CATALOG;
         $categoryNames=DB::table('categories')->pluck('name','id');
         foreach(preg_split('/\R/',trim($rows)) as $index=>$line){[$slug,$name,$categorySlug]=explode('|',$line);if(DB::table('products')->where('slug',$slug)->exists())continue;$categoryId=$ids[$categorySlug]??$ids['accessories'];$categoryName=$categoryNames[$categoryId]??'technology systems';$brand=strtok($name,' ');DB::table('products')->insert(['category_id'=>$categoryId,'name'=>$name,'slug'=>$slug,'sku'=>'REF-'.str_pad((string)($index+1),3,'0',STR_PAD_LEFT),'brand'=>Str::upper($brand),'summary'=>$name.' for integrated '.$categoryName.' applications.','description'=>$name.' is available for project-specific selection and integration. ViaTech can assist with application review, compatible accessories, installation planning, commissioning and after-sales support.','specifications'=>json_encode(['Product family'=>$categoryName,'Availability'=>'Contact for current model and lead time','Support'=>'Application, installation and after-sales support']),'price_mode'=>'quote','is_featured'=>$index<6,'is_published'=>true,'seo_title'=>$name.' in Pakistan','seo_description'=>'Request specifications and project support for '.$name.'.','created_at'=>now(),'updated_at'=>now()]);}
+        }
     }
 
     public function down(): void

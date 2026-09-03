@@ -13,8 +13,6 @@
 /bootstrap/ssr
 /playwright-report
 /test-results
-/storage/*.key
-/storage/pail
 auth.json
 Homestead.json
 Homestead.yaml

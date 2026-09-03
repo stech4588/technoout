@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder {
         foreach(['facebook'=>'https://facebook.com/technooutpk','linkedin'=>'https://linkedin.com/company/technoout','youtube'=>'https://youtube.com/@technoout'] as $p=>$u) DB::table('social_links')->insert(['platform'=>$p,'url'=>$u,'created_at'=>now(),'updated_at'=>now()]);
         $cats=['Automatic Entry Systems','Access Control Systems','Physical Security Equipment','Industrial Doors','Loading Bay Equipment','Safety & Protection','Industrial IT & Communication Systems','Accessories','Fabrication'];
         $map=[];foreach($cats as $i=>$name)$map[$name]=Category::updateOrCreate(['slug'=>Str::slug($name)],['name'=>$name,'description'=>'Professional '.$name.' engineered, installed and supported across Pakistan.','sort_order'=>$i+1]);
+        // Catalog products come from the scraper in real environments. These
+        // small records exist only so isolated unit tests have product fixtures.
+        if (app()->runningUnitTests()) {
         $products=[
             ['Automatic Doors','Automatic Entry Systems','Elegant sliding, swing and hospital-door automation for modern pedestrian entrances.'],
             ['Automatic Gates','Automatic Entry Systems','Sliding and swing gate operators for demanding residential, commercial and industrial sites.'],
@@ -40,6 +43,7 @@ class DatabaseSeeder extends Seeder {
             ['Movement & Safety Sensors','Accessories','Activation and presence sensors for safe automated entrance operation.'],
         ];
         foreach($products as $i=>$p)Product::updateOrCreate(['slug'=>Str::slug($p[0])],['name'=>$p[0],'sku'=>'VT-'.str_pad((string)($i+1),3,'0',STR_PAD_LEFT),'category_id'=>$map[$p[1]]->id,'summary'=>$p[2],'description'=>$p[2].' ViaTech provides survey, specification, installation, commissioning and after-sales support.','specifications'=>['Service'=>'Supply, installation and support','Coverage'=>'Pakistan','Warranty'=>'Project specific'],'price_mode'=>'quote','is_featured'=>$i<6,'is_published'=>true]);
+        }
         $pages=[
             ['page','About ViaTech','about-us','A company constantly moving forward','ViaTech delivers modern automatic entry, physical security, access control and industrial systems. Innovation, reliability and complete after-sales support guide every project.'],
             ['page','Company History','company-history','Built around engineering progress','From our beginnings in specialist automation, we have expanded into integrated entrance, industrial and high-security infrastructure solutions.'],
