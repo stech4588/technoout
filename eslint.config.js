@@ -18,6 +18,9 @@ export default [
             },
         },
         rules: {
+            // Inertia page props and the schema-driven admin UI intentionally carry
+            // heterogeneous server data that is narrowed at the rendering boundary.
+            '@typescript-eslint/no-explicit-any': 'off',
             'react/react-in-jsx-scope': 'off',
             'react/prop-types': 'off',
             'react/no-unescaped-entities': 'off',

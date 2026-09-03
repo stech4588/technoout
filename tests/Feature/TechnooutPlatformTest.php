@@ -264,6 +264,18 @@ class TechnooutPlatformTest extends TestCase
         $this->get('/visitor-identification-and-management-solution')->assertRedirect('/visitor-management-solution');
 
         $admin = \App\Models\User::where('email', 'admin@technoout.pk')->firstOrFail();
-        $this->actingAs($admin)->get('/admin/pages')->assertNotFound();
+        $this->actingAs($admin)->get('/admin/pages')->assertOk()->assertSee('Content pages');
+        $this->actingAs($admin)->post('/admin/pages', [
+            'type' => 'page',
+            'title' => 'Browser managed page',
+            'slug' => '',
+            'body' => 'Content managed through the control center.',
+            'is_published' => true,
+        ])->assertRedirect('/admin/pages');
+        $this->assertDatabaseHas('content_pages', [
+            'slug' => 'browser-managed-page',
+            'is_published' => true,
+            'sort_order' => 0,
+        ]);
     }
 }

@@ -5,6 +5,7 @@ import { Minus, PackageCheck } from 'lucide-react';
 import { FormEvent, useMemo } from 'react';
 
 interface ProductLine {
+    [key: string]: string | number;
     id: string;
     quantity: number | string;
 }
@@ -28,6 +29,7 @@ interface OfficeLocation {
 }
 
 interface QuoteRequestForm {
+    [key: string]: string | ProductLine[] | File[];
     type: string;
     name: string;
     company: string;
