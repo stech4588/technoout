@@ -99,6 +99,7 @@
     .public-theme a,
     .public-theme button { transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease; }
 
+
     .admin-theme .text-cyan-200,
     .admin-theme .text-cyan-300,
     .admin-theme .text-cyan-400 { color: #63a7ff !important; }
