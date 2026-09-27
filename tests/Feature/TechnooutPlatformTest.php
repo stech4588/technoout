@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\{Inquiry, Product, Quotation, User};
+use App\Mail\{InquiryThankYouMail, NewInquiryAlertMail};
+use App\Models\{Category, Customer, Inquiry, Product, Quotation, User};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -30,8 +32,72 @@ class TechnooutPlatformTest extends TestCase
         $this->assertDatabaseHas('categories', ['slug'=>'rfid-readers']);
     }
 
+    public function test_home_exposes_category_tree_for_browse_links(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/home')
+                ->has('categories')
+                ->where('categories.0.slug', 'automatic-entry-systems')
+                ->where('categories.0.products_count', fn ($count) => $count > 0)
+            );
+    }
+
+    public function test_catalog_parent_category_includes_descendant_products(): void
+    {
+        $parent = Category::where('slug', 'access-control-systems')->firstOrFail();
+        $expected = Product::where('is_published', true)
+            ->whereIn('category_id', $parent->selfAndDescendantIds())
+            ->count();
+
+        $this->assertGreaterThan($parent->products()->count(), $expected);
+
+        $this->get('/catalog?category=access-control-systems')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/catalog')
+                ->where('filters.category', 'access-control-systems')
+                ->where('products.total', $expected)
+                ->has('categories')
+                ->where('activeCategory.slug', 'access-control-systems')
+            );
+    }
+
+    public function test_catalog_child_category_filters_exact_branch(): void
+    {
+        $child = Category::where('slug', 'rfid-readers')->firstOrFail();
+        $expected = Product::where('is_published', true)->where('category_id', $child->id)->count();
+
+        $this->get('/catalog?category=rfid-readers')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/catalog')
+                ->where('products.total', $expected)
+                ->where('activeCategory.slug', 'rfid-readers')
+            );
+    }
+
+    public function test_catalog_search_matches_sku_and_brand(): void
+    {
+        $product = Product::where('is_published', true)->whereNotNull('sku')->firstOrFail();
+
+        $this->get('/catalog?search='.urlencode((string) $product->sku))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/catalog')
+                ->where('products.total', fn ($total) => $total >= 1)
+                ->has('products.data', fn (Assert $data) => $data
+                    ->where('0.sku', $product->sku)
+                    ->etc()
+                )
+            );
+    }
+
     public function test_customer_can_submit_a_contact_request(): void
     {
+        Mail::fake();
+
         $product = Product::firstOrFail();
         $response = $this->post('/contact', [
             'type' => 'quote',
@@ -45,22 +111,112 @@ class TechnooutPlatformTest extends TestCase
 
         $response->assertSessionHasNoErrors();
         $this->assertSame(1, Inquiry::count());
-        $this->assertDatabaseHas('inquiries', ['email' => 'buyer@example.com', 'status' => 'new']);
+        $this->assertDatabaseHas('inquiries', ['email' => 'buyer@example.com', 'status' => 'new', 'phone' => '+92 300 1234567']);
         $this->assertDatabaseHas('inquiry_items', [
             'inquiry_id' => Inquiry::firstOrFail()->id,
             'product_id' => $product->id,
             'quantity' => 2,
         ]);
+        $this->assertDatabaseHas('customers', [
+            'email' => 'buyer@example.com',
+            'email_normalized' => 'buyer@example.com',
+            'phone_normalized' => '3001234567',
+        ]);
+        $this->assertNotNull(Inquiry::firstOrFail()->customer_id);
+        $this->assertFalse(Inquiry::firstOrFail()->is_returning);
+
+        Mail::assertSent(InquiryThankYouMail::class, fn ($mail) => $mail->hasTo('buyer@example.com'));
+        Mail::assertSent(NewInquiryAlertMail::class);
+    }
+
+    public function test_general_inquiry_stores_no_product_items(): void
+    {
+        Mail::fake();
+        $product = Product::firstOrFail();
+
+        $this->post('/contact', [
+            'type' => 'general',
+            'name' => 'General Asker',
+            'email' => 'general@example.com',
+            'phone' => '+92 300 5556677',
+            'message' => 'Just a general question.',
+            'products' => [['id' => $product->id, 'quantity' => 5]],
+        ])->assertSessionHasNoErrors();
+
+        $inquiry = Inquiry::where('email', 'general@example.com')->firstOrFail();
+        $this->assertSame('general', $inquiry->type);
+        $this->assertCount(0, $inquiry->items);
+        $this->assertDatabaseHas('customers', ['email' => 'general@example.com']);
+    }
+
+    public function test_returning_customer_is_matched_by_email_or_phone(): void
+    {
+        Mail::fake();
+
+        $this->post('/contact', [
+            'type' => 'general',
+            'name' => 'First Visit',
+            'email' => 'repeat@example.com',
+            'phone' => '+92 300 9998877',
+            'message' => 'First contact.',
+        ])->assertSessionHasNoErrors();
+
+        $customerId = Inquiry::where('email', 'repeat@example.com')->value('customer_id');
+        $this->assertNotNull($customerId);
+        $this->assertSame(1, Customer::count());
+
+        $this->post('/contact', [
+            'type' => 'quote',
+            'name' => 'Second Visit',
+            'email' => 'repeat@example.com',
+            'phone' => '03009998877',
+            'message' => 'Coming back for a quote.',
+        ])->assertSessionHasNoErrors();
+
+        $second = Inquiry::where('message', 'Coming back for a quote.')->firstOrFail();
+        $this->assertSame($customerId, $second->customer_id);
+        $this->assertTrue($second->is_returning);
+        $this->assertSame(1, Customer::count());
+        $this->assertDatabaseHas('customers', [
+            'id' => $customerId,
+            'name' => 'Second Visit',
+            'phone_normalized' => '3009998877',
+        ]);
+
+        $this->post('/contact', [
+            'type' => 'general',
+            'name' => 'Phone Only Match',
+            'email' => 'other-repeat@example.com',
+            'phone' => '+92-300-9998877',
+            'message' => 'Same phone, new email.',
+        ])->assertSessionHasNoErrors();
+
+        $phoneMatch = Inquiry::where('email', 'other-repeat@example.com')->firstOrFail();
+        $this->assertSame($customerId, $phoneMatch->customer_id);
+        $this->assertTrue($phoneMatch->is_returning);
+        $this->assertSame(1, Customer::count());
+    }
+
+    public function test_contact_request_requires_phone_number(): void
+    {
+        $this->post('/contact', [
+            'type' => 'general',
+            'name' => 'No Phone Customer',
+            'email' => 'nophone@example.com',
+            'message' => 'Missing phone should fail validation.',
+        ])->assertSessionHasErrors('phone');
+
+        $this->assertDatabaseCount('inquiries', 0);
     }
 
     public function test_catalog_product_can_be_preselected_on_the_quote_form(): void
     {
         $product = Product::where('is_published', true)->firstOrFail();
 
-        $this->get('/contact?product='.$product->id)
+        $this->get('/quote?product='.$product->id)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('public/contact')
+                ->component('public/quote')
                 ->where('selectedProductId', $product->id)
                 ->has('products', 94)
             );
@@ -74,6 +230,7 @@ class TechnooutPlatformTest extends TestCase
             'type' => 'quote',
             'name' => 'Multiple Product Customer',
             'email' => 'multi@example.com',
+            'phone' => '+92 300 1112233',
             'message' => 'Please quote all selected products.',
             'products' => [
                 ['id' => $products[0]->id, 'quantity' => 1],
@@ -105,6 +262,7 @@ class TechnooutPlatformTest extends TestCase
             'type' => 'quote',
             'name' => 'Duplicate Product Customer',
             'email' => 'duplicate@example.com',
+            'phone' => '+92 300 1112233',
             'message' => 'Duplicate selection should not be accepted.',
             'products' => [
                 ['id' => $product->id, 'quantity' => 1],
@@ -118,6 +276,7 @@ class TechnooutPlatformTest extends TestCase
             'type' => 'quote',
             'name' => 'Unpublished Product Customer',
             'email' => 'unpublished@example.com',
+            'phone' => '+92 300 1112233',
             'message' => 'An unpublished product should not be accepted.',
             'products' => [['id' => $product->id, 'quantity' => 1]],
         ])->assertSessionHasErrors('products.0.id');
@@ -133,6 +292,7 @@ class TechnooutPlatformTest extends TestCase
             'type' => 'quote',
             'name' => 'Decimal Quantity Customer',
             'email' => 'decimal@example.com',
+            'phone' => '+92 300 1112233',
             'message' => 'Decimal quantities should not be accepted.',
             'products' => [['id' => $product->id, 'quantity' => 1.5]],
         ])->assertSessionHasErrors('products.0.quantity');
@@ -146,6 +306,7 @@ class TechnooutPlatformTest extends TestCase
             'type' => 'general',
             'name' => 'Walk-in Customer',
             'email' => 'incoming@example.com',
+            'phone' => '+92 300 4455667',
             'message' => 'Please recommend suitable equipment.',
         ])->assertSessionHasNoErrors();
 
@@ -171,6 +332,63 @@ class TechnooutPlatformTest extends TestCase
         $this->assertCount(2, $inquiry->items);
         $this->assertDatabaseHas('inquiry_items', ['inquiry_id' => $inquiry->id, 'product_id' => $products[0]->id, 'quantity' => 1]);
         $this->assertDatabaseHas('inquiry_items', ['inquiry_id' => $inquiry->id, 'product_id' => $products[1]->id, 'quantity' => 3]);
+    }
+
+    public function test_admin_can_create_request_for_selected_customer_without_name_collision(): void
+    {
+        $admin = User::where('email', 'admin@technoout.pk')->firstOrFail();
+
+        $aliA = Customer::create([
+            'name' => 'Ali Khan',
+            'company' => 'Acme',
+            'email' => 'ali.a@example.com',
+            'phone' => '+92 300 1111111',
+            'city' => 'Lahore',
+            'email_normalized' => 'ali.a@example.com',
+            'phone_normalized' => '3001111111',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+        ]);
+        $aliB = Customer::create([
+            'name' => 'Ali Khan',
+            'company' => 'Beta',
+            'email' => 'ali.b@example.com',
+            'phone' => '+92 300 2222222',
+            'city' => 'Karachi',
+            'email_normalized' => 'ali.b@example.com',
+            'phone_normalized' => '3002222222',
+            'first_seen_at' => now(),
+            'last_seen_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/inquiries/create')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('admin/resources/form')
+                ->has('options.customers', 2)
+            );
+
+        $this->actingAs($admin)->post('/admin/inquiries', [
+            'customer_id' => $aliB->id,
+            'type' => 'quote',
+            'name' => 'Ali Khan',
+            'company' => 'Beta Updated',
+            'email' => 'ali.b@example.com',
+            'phone' => '+92 300 2222222',
+            'city' => 'Karachi',
+            'message' => 'Admin created quote for selected Ali.',
+            'status' => 'new',
+        ])->assertSessionHasNoErrors()->assertRedirect('/admin/inquiries');
+
+        $inquiry = Inquiry::where('message', 'Admin created quote for selected Ali.')->firstOrFail();
+        $this->assertSame($aliB->id, $inquiry->customer_id);
+        $this->assertNotSame($aliA->id, $inquiry->customer_id);
+        $this->assertDatabaseHas('customers', [
+            'id' => $aliB->id,
+            'company' => 'Beta Updated',
+        ]);
+        $this->assertSame(2, Customer::count());
     }
 
     public function test_seeded_super_admin_can_access_admin_portal(): void
