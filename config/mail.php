@@ -109,8 +109,18 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'info@viatech.pk'),
+        'name' => env('MAIL_FROM_NAME', 'ViaTech'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | New inquiry inbox
+    |--------------------------------------------------------------------------
+    |
+    | Internal alert emails for website contact / quote requests.
+    |
+    */
+    'inquiry_notify' => env('INQUIRY_NOTIFY_EMAIL', env('MAIL_FROM_ADDRESS', 'info@viatech.pk')),
 
 ];

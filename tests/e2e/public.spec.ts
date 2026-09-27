@@ -50,7 +50,7 @@ test.describe('public portal', () => {
         await firstProduct.getByRole('link', { name: `View ${productName}` }).click();
         await expect(page.getByRole('heading', { level: 1, name: productName })).toBeVisible();
         await page.getByRole('link', { name: /Request quote/ }).first().click();
-        await expect(page).toHaveURL(/\/contact\?product=\d+#request-quote/);
+        await expect(page).toHaveURL(/\/quote\?product=\d+/);
         await expect(page.getByText('1 selected')).toBeVisible();
         await expect(page.getByText(productName).last()).toBeVisible();
         assertNoRuntimeErrors();
@@ -66,9 +66,8 @@ test.describe('public portal', () => {
         await page.getByPlaceholder('Full name *').fill(marker);
         await page.getByPlaceholder('Company').fill('ViaTech E2E');
         await page.getByPlaceholder('Email *').fill(`e2e-${Date.now()}@example.test`);
-        await page.getByPlaceholder('Phone').fill('+92 300 1234567');
+        await page.getByPlaceholder('Phone *').fill('+92 300 1234567');
         await page.getByPlaceholder('City').fill('Lahore');
-        await page.getByPlaceholder('Subject').fill(marker);
         await page.getByPlaceholder(/Describe your site/).fill('Automated end-to-end browser test request.');
 
         const picker = page.getByRole('combobox', { name: 'Search and add products' });
@@ -83,7 +82,7 @@ test.describe('public portal', () => {
         await expect(page.getByText('2 selected')).toBeVisible();
 
         await page.getByRole('button', { name: 'Submit request' }).click();
-        await expect(page.getByText('Your request has been received. Our team will contact you shortly.')).toBeVisible();
+        await expect(page.getByText(/Your request has been received/i)).toBeVisible();
 
         await loginAsAdmin(page);
         await page.goto('/admin/inquiries');
