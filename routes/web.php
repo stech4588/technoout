@@ -9,6 +9,7 @@ Route::get('/', [PublicSiteController::class,'home'])->name('home');
 Route::get('/catalog', [PublicSiteController::class,'catalog'])->name('catalog');
 Route::get('/products/{product:slug}', [PublicSiteController::class,'product'])->name('products.show');
 Route::get('/contact', [PublicSiteController::class,'contact'])->name('contact');
+Route::get('/quote', [PublicSiteController::class,'quote'])->name('quote');
 Route::post('/contact', [PublicSiteController::class,'submitContact'])->middleware('throttle:5,1')->name('contact.submit');
 Route::get('/documents/quotation/{token}', [PublicSiteController::class,'quotation'])->name('public.quotation');
 Route::post('/documents/quotation/{token}/respond', [PublicSiteController::class,'respondQuotation'])->middleware('throttle:10,1')->name('public.quotation.respond');

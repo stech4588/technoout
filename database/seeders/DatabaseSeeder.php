@@ -11,12 +11,32 @@ class DatabaseSeeder extends Seeder {
         if (app()->environment('production') && (!env('ADMIN_PASSWORD') || env('ADMIN_PASSWORD') === 'ChangeMe123!')) {
             throw new \RuntimeException('Set a strong, unique ADMIN_PASSWORD before production seeding.');
         }
-        $profile=BusinessProfile::create(['name'=>'ViaTech','legal_name'=>'ViaTech Technical Consultants','tagline'=>'Measure. Control. Solve.','description'=>'Future-ready automation, access control, physical security and industrial entry solutions for Pakistan.','currency'=>'PKR','quote_prefix'=>'QTN','invoice_prefix'=>'INV','footer_text'=>'Automation, security and industrial access systems—measured, controlled and solved with care.']);
-        $lahore=OfficeLocation::create(['name'=>'Lahore Office','address_line_1'=>'Office No. 5, First Floor, Mozang Hights, 43 Mozang Rd','address_line_2'=>'Mozang Chungi','city'=>'Lahore','region'=>'Punjab','postal_code'=>'54000','is_primary'=>true,'sort_order'=>1]);
-        $sheikhupura=OfficeLocation::create(['name'=>'Sheikhupura Office','address_line_1'=>'Office # 19, New Quaid-e-Azam Block, Kiyani Road','city'=>'Sheikhupura','region'=>'Punjab','sort_order'=>2]);
-        $production=OfficeLocation::create(['name'=>'Production Unit','address_line_1'=>'Viatech, New Jamia Masjid Makki Ahle Hadith, Ghordor Road','city'=>'Gujranwala','region'=>'Punjab','sort_order'=>3]);
-        foreach([[$lahore,'phone','Contact number','042-36303112'],[$sheikhupura,'phone','Contact number','042-36303112'],[$production,'mobile','Contact number','0316-4525002'],[null,'email','General enquiries','info@technoout.pk']] as $c) ContactChannel::create(['office_location_id'=>$c[0]?->id,'type'=>$c[1],'label'=>$c[2],'value'=>$c[3],'is_primary'=>$c[1]==='email']);
-        foreach(['facebook'=>'https://facebook.com/technooutpk','linkedin'=>'https://linkedin.com/company/technoout','youtube'=>'https://youtube.com/@technoout'] as $p=>$u) DB::table('social_links')->insert(['platform'=>$p,'url'=>$u,'created_at'=>now(),'updated_at'=>now()]);
+        BusinessProfile::firstOrCreate(
+            ['name' => 'ViaTech'],
+            ['legal_name'=>'ViaTech Technical Consultants','tagline'=>'Measure. Control. Solve.','description'=>'Future-ready automation, access control, physical security and industrial entry solutions for Pakistan.','currency'=>'PKR','quote_prefix'=>'QTN','invoice_prefix'=>'INV','footer_text'=>'Automation, security and industrial access systems—measured, controlled and solved with care.']
+        );
+        // Migrations may already have created the three branches — never insert duplicates on re-seed.
+        $lahore=OfficeLocation::updateOrCreate(
+            ['city' => 'Lahore', 'sort_order' => 1],
+            ['name'=>'ViaTech','address_line_1'=>'Office No.5, First Floor, Mozang Hights, 43 Mozang Rd','address_line_2'=>'Mozang Chungi','region'=>'Punjab','postal_code'=>'54000','country'=>'Pakistan','is_primary'=>true,'is_active'=>true]
+        );
+        $sheikhupura=OfficeLocation::updateOrCreate(
+            ['city' => 'Sheikhupura', 'sort_order' => 2],
+            ['name'=>'Sheikhupura Office','address_line_1'=>'Office # 19, New Quaid-e-Azam Block, Kiyani Road','region'=>'Punjab','country'=>'Pakistan','is_primary'=>false,'is_active'=>true]
+        );
+        $production=OfficeLocation::updateOrCreate(
+            ['name' => 'Production Unit'],
+            ['address_line_1'=>'Viatech, New Jamia Masjid Makki Ahle Hadith, Ghordor Road','city'=>'Gujranwala','region'=>'Punjab','country'=>'Pakistan','is_primary'=>false,'is_active'=>true,'sort_order'=>3]
+        );
+        foreach ([[$lahore,'phone','Contact number','042-36303112',true],[$sheikhupura,'phone','Contact number','042-36303112',false],[$production,'mobile','Contact number','0316-4525002',false],[null,'email','General enquiries','info@technoout.pk',true]] as $c) {
+            ContactChannel::updateOrCreate(
+                ['office_location_id' => $c[0]?->id, 'type' => $c[1], 'value' => $c[3]],
+                ['label' => $c[2], 'is_primary' => $c[4], 'is_public' => true]
+            );
+        }
+        foreach (['facebook'=>'https://facebook.com/technooutpk','linkedin'=>'https://linkedin.com/company/technoout','youtube'=>'https://youtube.com/@technoout'] as $p=>$u) {
+            DB::table('social_links')->updateOrInsert(['platform' => $p], ['url' => $u, 'updated_at' => now(), 'created_at' => now()]);
+        }
         $cats=['Automatic Entry Systems','Access Control Systems','Physical Security Equipment','Industrial Doors','Loading Bay Equipment','Safety & Protection','Industrial IT & Communication Systems','Accessories','Fabrication'];
         $map=[];foreach($cats as $i=>$name)$map[$name]=Category::updateOrCreate(['slug'=>Str::slug($name)],['name'=>$name,'description'=>'Professional '.$name.' engineered, installed and supported across Pakistan.','sort_order'=>$i+1]);
         // Catalog products come from the scraper in real environments. These

@@ -18,3 +18,5 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+start-phpmyadmin.bat
+/public/images/products/
